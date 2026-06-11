@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard SCADA - Visual Smart Cement Silo</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --bg-color: #0c192c;
+            --panel-color: #14253f;
+            --panel-border: #1e3558;
+            --text-color: #ffffff;
+            --text-muted: #94a3b8;
+
+            --accent-yellow: #F9D067;
+            --accent-orange: #E99757;
+            --accent-gradient: linear-gradient(90deg, var(--accent-yellow) 0%, var(--accent-orange) 100%);
+
+            --safe-color: #10b981;
+            --warning-color: #e99757;
+            --danger-color: #ef4444;
+            --info-color: #38bdf8;
+            --cement-color: #94a3b8;
+            --caking-color: #854d0e;
+            /* Warna semen mengeras/membatu */
+            --off-color: #475569;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 30px 20px;
+            background-image: radial-gradient(circle at top right, rgba(233, 151, 87, 0.05), transparent 600px),
+                radial-gradient(circle at bottom left, rgba(249, 208, 103, 0.03), transparent 500px);
+            background-attachment: fixed;
+        }
+
+        /* HEADER STYLING */
+        header {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 1400px;
+            margin: 0 auto 30px auto;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 12px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            font-size: 0.95rem;
+            color: #ffffff;
+            text-transform: uppercase;
+        }
+
+        .logo-area svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--accent-yellow);
+        }
+
+        .class-badge {
+            background: var(--accent-gradient);
+            color: #0c192c;
+            font-weight: 700;
+            font-size: 0.85rem;
+            padding: 6px 20px;
+            clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+            box-shadow: 0 4px 15px rgba(233, 151, 87, 0.2);
+            letter-spacing: 0.5px;
+        }
+
+        .header-main {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .title-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .pill-badge {
+            background: var(--accent-gradient);
+            color: #0c192c;
+            font-weight: 800;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            padding: 6px 14px;
+            border-radius: 4px;
+            width: fit-content;
+            text-transform: uppercase;
+            box-shadow: 0 2px 10px rgba(249, 208, 103, 0.15);
+        }
+
+        .header-top .pill-badge {
+            position: relative;
+            left: 60px;
+        }
+
+        .main-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            line-height: 1.15;
+            margin: 5px 0;
+            text-transform: uppercase;
+            letter-spacing: -0.5px;
+            background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        @media (max-width: 768px) {
+            .main-title {
+                font-size: 1.8rem;
+            }
+
+            .header-top {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+
+            .class-badge {
+                clip-path: none;
+                padding: 6px 12px;
+                border-radius: 4px;
+            }
+
+            .header-top .pill-badge {
+                left: 0;
+            }
+        }
+
+        .scada-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1.2fr;
+            gap: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 1024px) {
+            .scada-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background-color: var(--panel-color);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--panel-border);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .panel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+            border-color: rgba(249, 208, 103, 0.3);
+        }
+
+        .panel-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            border-bottom: 2px solid var(--accent-orange);
+            padding-bottom: 10px;
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: var(--accent-yellow);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* INPUTS SECTION */
+        .control-group {
+            margin-bottom: 18px;
+            background: #0f1c30;
+            padding: 14px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-orange);
+            transition: border-color 0.2s ease, background-color 0.2s ease;
+        }
+
+        .control-group:hover {
+            background: #152744;
+            border-left-color: var(--accent-yellow);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #e2e8f0;
+        }
+
+        /* Modernized slider range */
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: #1e2d4a;
+            border-radius: 3px;
+            outline: none;
+            margin: 10px 0;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent-gradient);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(249, 208, 103, 0.5);
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.25);
+            box-shadow: 0 0 15px rgba(249, 208, 103, 0.8);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border: none;
+            border-radius: 50%;
+            background: var(--accent-gradient);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(249, 208, 103, 0.5);
+            transition: transform 0.1s ease;
+        }
+
+        input[type="range"]::-moz-range-thumb:hover {
+            transform: scale(1.25);
+        }
+
+        /* MONITORING & ACTUATOR DISPLAY */
+        .value-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #0b1424;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-family: 'Outfit', monospace;
+            font-size: 0.95rem;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            transition: background-color 0.2s;
+        }
+
+        .value-display:hover {
+            background: #0f1c30;
+        }
+
+        .sensor-name {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+
+        .status-badge {
+            font-weight: 700;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* PLC LOGIC STATE */
+        #plc-state {
+            text-align: center;
+            font-size: 1.05rem;
+            font-weight: 700;
+            padding: 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            white-space: pre-line;
+            line-height: 1.5;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            letter-spacing: 0.5px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        /* --- VISUALISASI GRAFIS SILO --- */
+        .plant-visual {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding-top: 40px;
+            height: 100%;
+        }
+
+        /* Debu Emisi di atas atap */
+        #vis-dust-cloud {
+            width: 110px;
+            height: 45px;
+            background-color: rgba(236, 240, 241, 0.2);
+            border-radius: 50%;
+            position: absolute;
+            top: 0;
+            filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        /* Pipa Infeed (Katup) */
+        .vis-pipe-in {
+            width: 50px;
+            height: 24px;
+            background-color: var(--safe-color);
+            position: absolute;
+            top: 60px;
+            left: calc(50% - 110px);
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .vis-pipe-in::after {
+            content: "Infeed Valve";
+            position: absolute;
+            top: -22px;
+            left: -15px;
+            font-size: 0.7rem;
+            color: #94a3b8;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+        }
+
+        /* Filter Atap */
+        #vis-filter {
+            width: 90px;
+            height: 35px;
+            background-color: #64748b;
+            border-radius: 6px 6px 0 0;
+            text-align: center;
+            font-size: 0.75rem;
+            line-height: 35px;
+            font-weight: 800;
+            color: #ffffff;
+            transition: background-color 0.3s;
+            z-index: 2;
+            letter-spacing: 1px;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Badan Silo */
+        .vis-silo-body {
+            width: 170px;
+            height: 260px;
+            border: 4px solid #4a5d78;
+            border-bottom: none;
+            background-color: #0b1424;
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px 8px 0 0;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Isi Silo (Level) */
+        #vis-level-fill {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: linear-gradient(to top, var(--cement-color), #f1f5f9);
+            height: 50%;
+            transition: height 0.3s linear, background 0.5s ease;
+            opacity: 0.85;
+        }
+
+        /* Garpu Getar (VEGAWAVE) */
+        .vis-fork {
+            position: absolute;
+            top: 5%;
+            right: 0;
+            width: 30px;
+            height: 12px;
+            background-color: var(--safe-color);
+            border-radius: 6px 0 0 6px;
+            transition: background-color 0.3s;
+        }
+
+        /* Radar (VEGAPULS) */
+        .vis-radar {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 18px;
+            background-color: var(--accent-orange);
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Corong Silo (Hopper) */
+        .vis-hopper {
+            width: 170px;
+            height: 60px;
+            border: 4px solid #4a5d78;
+            border-top: none;
+            border-bottom-left-radius: 85px;
+            border-bottom-right-radius: 85px;
+            position: relative;
+            background-color: #0b1424;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            padding-bottom: 5px;
+            box-shadow: inset 0 -10px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Semen di Hopper */
+        #vis-hopper-fill {
+            width: 100%;
+            height: 100%;
+            background-color: var(--cement-color);
+            transition: background-color 0.5s ease;
+        }
+
+        /* Blower / Pipa Angin Bawah */
+        #vis-blower {
+            margin-top: 15px;
+            width: 60px;
+            height: 32px;
+            background-color: var(--info-color);
+            border-radius: 16px;
+            text-align: center;
+            line-height: 32px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #0c192c;
+            transition: background-color 0.3s;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        #vis-blower::before {
+            content: "Fluidization Air";
+            position: absolute;
+            bottom: -22px;
+            left: -20px;
+            width: 100px;
+            font-size: 0.65rem;
+            color: #94a3b8;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+        }
+
+        /* UTILITIES & ANIMATIONS */
+        .bg-normal {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .bg-warning {
+            background-color: rgba(233, 151, 87, 0.15);
+            color: #fcd34d;
+            border: 1px solid rgba(233, 151, 87, 0.3);
+        }
+
+        .bg-danger {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            animation: pulse 1.5s infinite;
+        }
+
+        .bg-info {
+            background-color: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+
+        .bg-off {
+            background-color: rgba(71, 85, 105, 0.15);
+            color: #94a3b8;
+            border: 1px solid rgba(71, 85, 105, 0.3);
+        }
+
+        .text-info {
+            color: var(--accent-yellow);
+            font-weight: 700;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="header-top">
+            <div class="logo-area">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M14.5 9.5 5 19" />
+                    <path d="M13 5.5c.5-1.5 2-2.5 3.5-2.5s3 1 3.5 2.5c.5 1.5.5 3.5-.5 5-1 1.5-2.5 2.5-4 2.5" />
+                </svg>
+                <span>Tugas Akhir</span>
+            </div>
+            <div class="pill-badge">Kelompok 12</div>
+            <div class="class-badge">Transduser dan Sensor - Kelas C</div>
+        </div>
+        <div class="header-main">
+            <div class="title-block">
+                <div class="pill-badge">Sistem Pada Industri Semen</div>
+                <h1 class="main-title">Arsitektur Otomatis Monitoring Silo Semen</h1>
+            </div>
+        </div>
+    </header>
+
+    <div class="scada-container">
+
+        <div class="panel">
+            <div class="panel-title">Simulasi Lapangan (Control)</div>
+
+            <div class="control-group">
+                <label>Level Semen Aktual: <span id="txt-input-level" class="text-info">50</span>%</label>
+                <input type="range" id="input-level" min="0" max="100" value="50">
+            </div>
+
+            <div class="control-group">
+                <label>Tekanan Udara Blower: <span id="txt-input-pressure" class="text-info">5.0</span> Bar</label>
+                <input type="range" id="input-pressure" min="0" max="10" step="0.1" value="5.0">
+            </div>
+
+            <div class="control-group" style="border-left-color: var(--warning-color);">
+                <label>Kelembapan Udara (Moisture): <span id="txt-input-moisture" class="text-info">30</span>
+                    %RH</label>
+                <input type="range" id="input-moisture" min="0" max="100" value="30">
+                <small style="color: var(--text-muted); font-size:0.75rem;">(Batas > 60% = Semen
+                    Mengeras/Caking)</small>
+            </div>
+
+            <div class="control-group" style="border-left-color: var(--danger-color);">
+                <label>Emisi Debu Atap (Dust): <span id="txt-input-dust" class="text-info">15</span> mg/m³</label>
+                <input type="range" id="input-dust" min="0" max="100" value="15">
+                <small style="color: var(--text-muted); font-size:0.75rem;">(Batas > 50 = Filter Jebol/Bocor)</small>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title" style="text-align: center;">Plant Visualizer</div>
+            <div class="plant-visual">
+
+                <div id="vis-dust-cloud"></div>
+                <div id="vis-pipe-in" class="vis-pipe-in"></div>
+                <div id="vis-filter">FILTER</div>
+
+                <div class="vis-silo-body">
+                    <div id="vis-radar" class="vis-radar" title="VEGAPULS 6X"></div>
+                    <div id="vis-fork" class="vis-fork" title="VEGAWAVE 62"></div>
+                    <div id="vis-level-fill"></div>
+                </div>
+
+                <div class="vis-hopper">
+                    <div id="vis-hopper-fill"></div>
+                </div>
+
+                <div id="vis-blower">FAN</div>
+            </div>
+        </div>
+
+        <div class="panel" style="justify-content: space-between;">
+
+            <div>
+                <div class="panel-title">Monitoring (Sensor) & PLC State</div>
+                <div class="value-display">
+                    <span class="sensor-name">VEGAPULS (Radar Level):</span>
+                    <span id="mon-radar" class="text-info">50%</span>
+                </div>
+                <div class="value-display">
+                    <span class="sensor-name">VEGAWAVE (Garpu Getar):</span>
+                    <span id="mon-switch" class="status-badge bg-normal">AMAN</span>
+                </div>
+                <div class="value-display">
+                    <span class="sensor-name">Sensor Kelembapan:</span>
+                    <span id="mon-moisture" class="text-info">30 %RH</span>
+                </div>
+                <div class="value-display">
+                    <span class="sensor-name">Sensor Emisi Debu:</span>
+                    <span id="mon-dust" class="text-info">15 mg/m³</span>
+                </div>
+                <div class="value-display">
+                    <span class="sensor-name">Tekanan Corong (VEGABAR):</span>
+                    <span id="mon-pressure" class="text-info">5.0 Bar</span>
+                </div>
+            </div>
+
+            <div style="margin-top: 15px;">
+                <div id="plc-state" class="bg-normal">SYSTEM RUNNING NORMAL</div>
+            </div>
+
+            <div style="margin-top: 15px; border-top: 1px solid var(--panel-border); padding-top: 10px;">
+                <div class="value-display">
+                    <span class="sensor-name">Valve Infeed:</span>
+                    <span id="act-valve" class="status-badge bg-normal">BUKA</span>
+                </div>
+                <div class="value-display">
+                    <span class="sensor-name">Blower Fluidisasi:</span>
+                    <span id="act-blower" class="status-badge bg-normal">ON</span>
+                </div>
+                <div class="value-display">
+                    <span class="sensor-name">Pembersih Filter (Purge):</span>
+                    <span id="act-filter" class="status-badge bg-off">OFF</span>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // DOM Elements - Inputs
+        const inputs = {
+            level: document.getElementById('input-level'),
+            pressure: document.getElementById('input-pressure'),
+            moisture: document.getElementById('input-moisture'),
+            dust: document.getElementById('input-dust')
+        };
+        const texts = {
+            level: document.getElementById('txt-input-level'),
+            pressure: document.getElementById('txt-input-pressure'),
+            moisture: document.getElementById('txt-input-moisture'),
+            dust: document.getElementById('txt-input-dust')
+        };
+
+        // DOM Elements - Monitors & Logic
+        const monitors = {
+            radar: document.getElementById('mon-radar'),
+            switch: document.getElementById('mon-switch'),
+            pressure: document.getElementById('mon-pressure'),
+            moisture: document.getElementById('mon-moisture'),
+            dust: document.getElementById('mon-dust')
+        };
+        const plcState = document.getElementById('plc-state');
+        const actuators = {
+            valve: document.getElementById('act-valve'),
+            blower: document.getElementById('act-blower'),
+            filter: document.getElementById('act-filter')
+        };
+
+        // DOM Elements - Visuals
+        const visuals = {
+            dustCloud: document.getElementById('vis-dust-cloud'),
+            pipeIn: document.getElementById('vis-pipe-in'),
+            filter: document.getElementById('vis-filter'),
+            levelFill: document.getElementById('vis-level-fill'),
+            hopperFill: document.getElementById('vis-hopper-fill'),
+            fork: document.getElementById('vis-fork'),
+            blower: document.getElementById('vis-blower')
+        };
+
+        function updateSystem() {
+            // 1. Baca Nilai Input
+            const val = {
+                level: parseInt(inputs.level.value),
+                pressure: parseFloat(inputs.pressure.value),
+                moisture: parseInt(inputs.moisture.value),
+                dust: parseInt(inputs.dust.value)
+            };
+
+            // Update UI Teks Input
+            texts.level.innerText = val.level;
+            texts.pressure.innerText = val.pressure.toFixed(1);
+            texts.moisture.innerText = val.moisture;
+            texts.dust.innerText = val.dust;
+
+            // 2. LOGIKA PLC & SENSOR
+            let alarms = [];
+            let isDanger = false;
+            let isWarning = false;
+
+            // A. Evaluasi Level & Overfill Protection
+            monitors.radar.innerText = val.level + '%';
+            visuals.levelFill.style.height = val.level + '%';
+
+            if (val.level >= 95) {
+                monitors.switch.innerText = "TEREDAM (FULL)";
+                monitors.switch.className = "status-badge bg-danger";
+                visuals.fork.style.backgroundColor = "var(--danger-color)"; // Garpu visual merah
+                alarms.push("[INTERLOCK] Silo Penuh!");
+                isDanger = true;
+            } else {
+                monitors.switch.innerText = "AMAN";
+                monitors.switch.className = "status-badge bg-normal";
+                visuals.fork.style.backgroundColor = "var(--safe-color)"; // Garpu visual hijau
+                if (val.level >= 85) {
+                    alarms.push("[WARNING] Silo Hampir Penuh.");
+                    isWarning = true;
+                }
+            }
+
+            // B. Evaluasi Kelembapan (Moisture -> Caking)
+            monitors.moisture.innerText = val.moisture + ' %RH';
+            if (val.moisture >= 60) {
+                alarms.push("[INTERLOCK] Udara Basah! Semen Membatu.");
+                isDanger = true;
+                // Visualisasi Caking: Semen berubah warna jadi coklat tanah
+                visuals.levelFill.style.background = "linear-gradient(to top, var(--caking-color), #7c2d12)";
+                visuals.hopperFill.style.backgroundColor = "var(--caking-color)";
+            } else {
+                // Visualisasi Normal: Abu-abu semen
+                visuals.levelFill.style.background = "linear-gradient(to top, var(--cement-color), #cbd5e1)";
+                visuals.hopperFill.style.backgroundColor = "var(--cement-color)";
+            }
+
+            // C. Evaluasi Tekanan
+            monitors.pressure.innerText = val.pressure.toFixed(1) + ' Bar';
+            if (val.pressure >= 8.0) {
+                alarms.push("[ALARM] Tekanan Corong Tinggi!");
+                isDanger = true;
+            }
+
+            // D. Evaluasi Emisi Debu (Filter Bocor)
+            monitors.dust.innerText = val.dust + ' mg/m³';
+            visuals.dustCloud.style.opacity = (val.dust / 100) + 0.1; // Visualisasi debu menebal
+
+            if (val.dust >= 50) {
+                alarms.push("[ALARM LINGKUNGAN] Filter Atap Jebol!");
+                isDanger = true;
+                visuals.dustCloud.style.backgroundColor = "rgba(239, 68, 68, 0.4)"; // Awan debu jadi kemerahan (polusi parah)
+                visuals.filter.style.backgroundColor = "var(--danger-color)"; // Box filter merah
+            } else {
+                visuals.dustCloud.style.backgroundColor = "rgba(203, 213, 225, 0.25)"; // Awan debu putih wajar
+                visuals.filter.style.backgroundColor = "var(--off-color)"; // Box filter normal
+                if (val.dust >= 30) {
+                    alarms.push("[WARNING] Emisi Debu Meningkat.");
+                    isWarning = true;
+                    visuals.filter.style.backgroundColor = "var(--warning-color)";
+                }
+            }
+
+            // 3. TAMPILAN STATUS PLC
+            if (alarms.length === 0) {
+                plcState.innerText = "SYSTEM RUNNING NORMAL";
+                plcState.className = "bg-normal";
+            } else {
+                plcState.innerText = alarms.join("\n");
+                plcState.className = isDanger ? "bg-danger" : "bg-warning";
+            }
+
+            // 4. LOGIKA AKTUATOR (OUTPUT) & VISUALISASINYA
+
+            // Infeed Valve (Mati jika level >= 95)
+            if (val.level >= 95) {
+                actuators.valve.innerText = "TUTUP (INTERLOCK)";
+                actuators.valve.className = "status-badge bg-danger";
+                visuals.pipeIn.style.backgroundColor = "var(--danger-color)";
+            } else {
+                actuators.valve.innerText = "BUKA";
+                actuators.valve.className = "status-badge bg-normal";
+                visuals.pipeIn.style.backgroundColor = "var(--safe-color)";
+            }
+
+            // Blower Fluidisasi (Mati jika Interlock, Tekanan Tinggi, ATAU Moisture Tinggi)
+            if (val.pressure >= 8.0 || val.level >= 95 || val.moisture >= 60) {
+                actuators.blower.innerText = "OFF (INTERLOCK)";
+                actuators.blower.className = "status-badge bg-danger";
+                visuals.blower.style.backgroundColor = "var(--off-color)";
+            } else {
+                actuators.blower.innerText = "ON (FLUIDIZING)";
+                actuators.blower.className = "status-badge bg-info";
+                visuals.blower.style.backgroundColor = "var(--info-color)";
+            }
+
+            // Pembersih Filter / Purge
+            if (val.dust >= 50) {
+                actuators.filter.innerText = "PURGE DARURAT!";
+                actuators.filter.className = "status-badge bg-danger";
+            } else if (val.dust >= 30) {
+                actuators.filter.innerText = "AUTO CLEANING";
+                actuators.filter.className = "status-badge bg-warning";
+            } else {
+                actuators.filter.innerText = "STANDBY";
+                actuators.filter.className = "status-badge bg-off";
+            }
+        }
+
+        // Attach listeners
+        Object.values(inputs).forEach(input => {
+            input.addEventListener('input', updateSystem);
+        });
+
+        // Initialize First Run
+        updateSystem();
+    </script>
+</body>
+
+</html>
