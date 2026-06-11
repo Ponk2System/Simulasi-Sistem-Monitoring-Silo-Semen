@@ -42,6 +42,16 @@ Simulator ini mengintegrasikan 3 pilar utama otomasi industri (Loop Tertutup) ya
 
 ---
 
+## 👥 Anggota Kelompok
+
+| No. | Nama | NIM |
+| :---: | :--- | :--- |
+| 1 | Muhammad Habiburrahman | 21120124140121 |
+| 2 | Arkan Nafi Nurcahyo | 21120124140160 |
+| 3 | Cornelius Fransinatra Wijaya | 21120124140141 |
+
+---
+
 ## 🚀 Cara Menjalankan Simulator Secara Lokal
 
 Aplikasi web ini dibangun murni menggunakan **Vanilla JavaScript, HTML5, dan CSS3** tanpa memerlukan *dependency* atau *framework* eksternal (sangat ringan dan kompatibel).
