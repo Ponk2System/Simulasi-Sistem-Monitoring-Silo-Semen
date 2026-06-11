@@ -11,7 +11,7 @@ Repositori ini berisi kode sumber untuk **Simulator Smart Cement Silo v3.0**, se
 
 ## 🎨 Presentasi Proyek & Desain UI
 Alur pemikiran rekayasa (*engineering workflow*), detail justifikasi finansial (ROI), arsitektur sistem otomatisasi, serta perancangan desain visual untuk proyek interaktif ini dapat diakses secara komprehensif melalui tautan berikut:
-🔗 **[Desain Proyek Smart Silo - Canva Presentation]([https://canva.link/kfjyrrbrmoau1uq])**
+🔗 **[Desain Proyek Smart Silo - Canva Presentation](https://canva.link/kfjyrrbrmoau1uq)**
 
 ---
 
